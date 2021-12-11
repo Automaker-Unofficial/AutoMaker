@@ -16,18 +16,18 @@
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
     
-    <distributionManagement>
-        <repository>
-            <id>celtechRepo</id>
-            <name>CELTech releases</name>
-            <url>http://build.cel-robox.com:8080/artifactory/libs-release-local</url>
-        </repository>        
-        <snapshotRepository>
-            <id>celtechRepo</id>
-            <name>CELTech snapshots</name>
-            <url>http://build.cel-robox.com:8080/artifactory/libs-snapshot-local</url>
-        </snapshotRepository>
-    </distributionManagement>
+<!--    <distributionManagement>-->
+<!--        <repository>-->
+<!--            <id>celtechRepo</id>-->
+<!--            <name>CELTech releases</name>-->
+<!--            <url>http://build.cel-robox.com:8080/artifactory/libs-release-local</url>-->
+<!--        </repository>        -->
+<!--        <snapshotRepository>-->
+<!--            <id>celtechRepo</id>-->
+<!--            <name>CELTech snapshots</name>-->
+<!--            <url>http://build.cel-robox.com:8080/artifactory/libs-snapshot-local</url>-->
+<!--        </snapshotRepository>-->
+<!--    </distributionManagement>-->
 
 
     <organization>
@@ -59,7 +59,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.3.2</version>
+                <version>3.2.0</version>
                 <configuration>
                     <finalName>${project.artifactId}</finalName>
                     <archive>
@@ -75,7 +75,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>2.9</version>
+                <version>3.2.0</version>
                 <executions>
                     <execution>
                         <id>copy-dependencies</id>

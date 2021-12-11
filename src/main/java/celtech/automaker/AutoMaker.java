@@ -11,23 +11,13 @@ import celtech.roboxbase.comms.interapp.InterAppCommsThread;
 import celtech.roboxbase.comms.interapp.InterAppRequest;
 import celtech.roboxbase.comms.interapp.InterAppStartupStatus;
 import celtech.roboxbase.configuration.BaseConfiguration;
-import celtech.roboxbase.licence.Licence;
-import celtech.roboxbase.licensing.LicenceManager;
-import celtech.roboxbase.licensing.LicensedPrinterListChangeListener;
 import celtech.roboxbase.printerControl.model.Printer;
 import celtech.roboxbase.printerControl.model.PrinterException;
 import celtech.roboxbase.utils.ApplicationUtils;
 import celtech.roboxbase.utils.tasks.TaskResponse;
 import celtech.utils.AutoUpdate;
 import celtech.utils.AutoUpdateCompletionListener;
-import static celtech.utils.SystemValidation.check3DSupported;
-import static celtech.utils.SystemValidation.checkMachineTypeRecognised;
 import celtech.webserver.LocalWebInterface;
-import com.sun.javafx.application.LauncherImpl;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Rectangle2D;
@@ -41,21 +31,26 @@ import libertysystems.configuration.Configuration;
 import libertysystems.stenographer.LogLevel;
 import libertysystems.stenographer.Stenographer;
 import libertysystems.stenographer.StenographerFactory;
-import sun.awt.util.ThreadGroupUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ResourceBundle;
+
+import static celtech.roboxbase.configuration.BaseConfiguration.checkFeaturesAvailability;
+import static celtech.utils.SystemValidation.check3DSupported;
+import static celtech.utils.SystemValidation.checkMachineTypeRecognised;
 
 /**
- *
  * @author Ian Hudson @ Liberty Systems Limited
  */
-public class AutoMaker extends Application implements AutoUpdateCompletionListener, InterAppCommsConsumer
-{
+public class AutoMaker extends Application implements AutoUpdateCompletionListener, InterAppCommsConsumer {
 
     private static final Stenographer steno;
 
-    static
-    {
+    static {
         steno = StenographerFactory.getStenographer(AutoMaker.class.getName());
     }
+
     private static DisplayManager displayManager = null;
     private ResourceBundle i18nBundle = null;
     private static Configuration configuration = null;
@@ -73,39 +68,31 @@ public class AutoMaker extends Application implements AutoUpdateCompletionListen
     private final String paramDivider = "\\?";
 
     @Override
-    public void init() throws Exception
-    {
+    public void init() throws Exception {
         AutoMakerInterAppRequestCommands interAppCommand = AutoMakerInterAppRequestCommands.NONE;
         List<InterAppParameter> interAppParameters = new ArrayList<>();
 
-        if (getParameters().getUnnamed().size() == 1)
-        {
+        if (getParameters().getUnnamed().size() == 1) {
             String potentialParam = getParameters().getUnnamed().get(0);
-            if (potentialParam.startsWith(uriScheme))
-            {
+            if (potentialParam.startsWith(uriScheme)) {
                 //We've been started through a URI scheme
                 potentialParam = potentialParam.replaceAll(uriScheme, "");
 
                 String[] paramParts = potentialParam.split(paramDivider);
-                if (paramParts.length == 2)
-                {
+                if (paramParts.length == 2) {
 //                    steno.info("Viable param:" + potentialParam + "->" + paramParts[0] + " -------- " + paramParts[1]);
                     // Got a viable param
-                    switch (paramParts[0])
-                    {
+                    switch (paramParts[0]) {
                         case "loadModel":
                             String[] subParams = paramParts[1].split("&");
 
-                            for (String subParam : subParams)
-                            {
+                            for (String subParam : subParams) {
                                 InterAppParameter parameter = InterAppParameter.fromParts(subParam);
-                                if (parameter != null)
-                                {
+                                if (parameter != null) {
                                     interAppParameters.add(parameter);
                                 }
                             }
-                            if (interAppParameters.size() > 0)
-                            {
+                            if (interAppParameters.size() > 0) {
                                 interAppCommand = AutoMakerInterAppRequestCommands.LOAD_MESH_INTO_LAYOUT_VIEW;
                             }
                             break;
@@ -122,51 +109,41 @@ public class AutoMaker extends Application implements AutoUpdateCompletionListen
 
         InterAppStartupStatus startupStatus = interAppCommsListener.letUsBegin(interAppCommsRequest, this);
 
-        if (startupStatus == InterAppStartupStatus.STARTED_OK)
-        {
+        if (startupStatus == InterAppStartupStatus.STARTED_OK) {
             BaseConfiguration.initialise(AutoMaker.class);
             Lookup.setupDefaultValuesFX();
             BaseConfiguration.enableApplicationFeature(ApplicationFeature.AUTO_UPDATE_FIRMWARE);
             BaseConfiguration.enableApplicationFeature(ApplicationFeature.RESET_PRINTER_ID);
-            
-            BaseLookup.getPrinterListChangesNotifier().addListener(new LicensedPrinterListChangeListener());
-            
+
             ApplicationUtils.outputApplicationStartupBanner(this.getClass());
 
             commsManager = RoboxCommsManager.getInstance(BaseConfiguration.getBinariesDirectory(), false, Lookup.getUserPreferences().detectLoadedFilamentProperty(), Lookup.getUserPreferences().searchForRemoteCamerasProperty());
 
-            try
-            {
+            try {
                 configuration = Configuration.getInstance();
-            } catch (ConfigNotLoadedException ex)
-            {
+            } catch (ConfigNotLoadedException ex) {
                 steno.error("Couldn't load application configuration");
             }
 
-            switch (interAppCommand)
-            {
+            switch (interAppCommand) {
                 case LOAD_MESH_INTO_LAYOUT_VIEW:
 
                     interAppCommsRequest.getUnencodedParameters()
                             .forEach(param ->
-                                    {
-                                        if (param.getType() == InterAppParameterType.MODEL_NAME)
-                                        {
-                                            modelsToLoadAtStartup.add(param.getUnencodedParameter());
-                                        } else if (param.getType() == InterAppParameterType.PROJECT_NAME)
-                                        {
-                                            modelsToLoadAtStartup_projectName = param.getUnencodedParameter();
-                                        } else if (param.getType() == InterAppParameterType.DONT_GROUP_MODELS)
-                                        {
-                                            switch (param.getUnencodedParameter())
-                                            {
-                                                case "true":
-                                                    modelsToLoadAtStartup_dontgroup = true;
-                                                    break;
-                                                default:
-                                                    break;
-                                            }
-                                        }
+                            {
+                                if (param.getType() == InterAppParameterType.MODEL_NAME) {
+                                    modelsToLoadAtStartup.add(param.getUnencodedParameter());
+                                } else if (param.getType() == InterAppParameterType.PROJECT_NAME) {
+                                    modelsToLoadAtStartup_projectName = param.getUnencodedParameter();
+                                } else if (param.getType() == InterAppParameterType.DONT_GROUP_MODELS) {
+                                    switch (param.getUnencodedParameter()) {
+                                        case "true":
+                                            modelsToLoadAtStartup_dontgroup = true;
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                }
                             });
                     break;
                 default:
@@ -178,14 +155,11 @@ public class AutoMaker extends Application implements AutoUpdateCompletionListen
     }
 
     @Override
-    public void start(Stage stage) throws Exception
-    {
+    public void start(Stage stage) throws Exception {
         mainStage = new Stage();
 
-        if (checkMachineTypeRecognised(BaseLookup.getLanguageBundle()))
-        {
-            try
-            {
+        if (checkMachineTypeRecognised(BaseLookup.getLanguageBundle())) {
+            try {
                 displayManager = DisplayManager.getInstance();
                 i18nBundle = BaseLookup.getLanguageBundle();
 
@@ -203,55 +177,45 @@ public class AutoMaker extends Application implements AutoUpdateCompletionListen
                     boolean transferringDataToPrinter = false;
                     boolean willShutDown = true;
 
-                    for (Printer printer : BaseLookup.getConnectedPrinters())
-                    {
+                    for (Printer printer : BaseLookup.getConnectedPrinters()) {
                         transferringDataToPrinter = transferringDataToPrinter
                                 | printer.getPrintEngine().transferGCodeToPrinterService.isRunning();
                     }
 
-                    if (transferringDataToPrinter)
-                    {
+                    if (transferringDataToPrinter) {
                         boolean shutDownAnyway = BaseLookup.getSystemNotificationHandler().
                                 showJobsTransferringShutdownDialog();
 
-                        if (shutDownAnyway)
-                        {
-                            for (Printer printer : BaseLookup.getConnectedPrinters())
-                            {
+                        if (shutDownAnyway) {
+                            for (Printer printer : BaseLookup.getConnectedPrinters()) {
                                 waitingForCancelFrom.add(printer);
 
-                                try
-                                {
+                                try {
                                     printer.cancel((TaskResponse taskResponse) ->
                                     {
                                         waitingForCancelFrom.remove(printer);
                                     }, Lookup.getUserPreferences().isSafetyFeaturesOn());
-                                } catch (PrinterException ex)
-                                {
+                                } catch (PrinterException ex) {
                                     steno.error("Error cancelling print on printer " + printer.
                                             getPrinterIdentity().printerFriendlyNameProperty().get()
                                             + " - "
                                             + ex.getMessage());
                                 }
                             }
-                        } else
-                        {
+                        } else {
                             event.consume();
                             willShutDown = false;
                         }
                     }
 
-                    if (willShutDown)
-                    {
+                    if (willShutDown) {
                         ApplicationUtils.outputApplicationShutdownBanner();
                         Platform.exit();
-                    } else
-                    {
+                    } else {
                         steno.info("Shutdown aborted - transfers to printer were in progress");
                     }
                 });
-            } catch (Throwable ex)
-            {
+            } catch (Throwable ex) {
                 ex.printStackTrace();
                 Platform.exit();
             }
@@ -260,27 +224,38 @@ public class AutoMaker extends Application implements AutoUpdateCompletionListen
         }
     }
 
-    private void attachIcons(Stage stage)
-    {
+    /**
+     * Get root thread group
+     *
+     * @return root thread group
+     */
+    private static ThreadGroup getRootThreadGroup() {
+        ThreadGroup root = Thread.currentThread().getThreadGroup();
+        ThreadGroup parent = root.getParent();
+        while (parent != null) {
+            root = parent;
+            parent = parent.getParent();
+        }
+        return root;
+    }
+
+    private void attachIcons(Stage stage) {
         stage.getIcons().addAll(new Image(getClass().getResourceAsStream(
-                "/celtech/automaker/resources/images/AutoMakerIcon_256x256.png")),
+                        "/celtech/automaker/resources/images/AutoMakerIcon_256x256.png")),
                 new Image(getClass().getResourceAsStream(
-                                "/celtech/automaker/resources/images/AutoMakerIcon_64x64.png")),
+                        "/celtech/automaker/resources/images/AutoMakerIcon_64x64.png")),
                 new Image(getClass().getResourceAsStream(
-                                "/celtech/automaker/resources/images/AutoMakerIcon_32x32.png")));
+                        "/celtech/automaker/resources/images/AutoMakerIcon_32x32.png")));
     }
 
     @Override
-    public void autoUpdateComplete(boolean requiresShutdown)
-    {
-        if (requiresShutdown)
-        {
+    public void autoUpdateComplete(boolean requiresShutdown) {
+        if (requiresShutdown) {
             Platform.exit();
         }
     }
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         System.setProperty("javafx.preloader", AutoMakerPreloader.class.getName());
         launch(args);
         // Sometimes a thread stops the application from terminating. The
@@ -292,38 +267,31 @@ public class AutoMaker extends Application implements AutoUpdateCompletionListen
     }
 
     @Override
-    public void stop() throws Exception
-    {
+    public void stop() throws Exception {
         interAppCommsListener.shutdown();
 
-        if (localWebInterface != null)
-        {
+        if (localWebInterface != null) {
             localWebInterface.stop();
         }
 
         int timeoutStrikes = 3;
-        while (waitingForCancelFrom.size() > 0 && timeoutStrikes > 0)
-        {
+        while (waitingForCancelFrom.size() > 0 && timeoutStrikes > 0) {
             Thread.sleep(1000);
             timeoutStrikes--;
         }
 
-        if (commsManager != null)
-        {
+        if (commsManager != null) {
             commsManager.shutdown();
         }
-        if (autoUpdater != null)
-        {
+        if (autoUpdater != null) {
             autoUpdater.shutdown();
         }
-        if (displayManager != null)
-        {
+        if (displayManager != null) {
             displayManager.shutdown();
         }
         BaseConfiguration.shutdown();
 
-        if (steno.getCurrentLogLevel().isLoggable(LogLevel.DEBUG))
-        {
+        if (steno.getCurrentLogLevel().isLoggable(LogLevel.DEBUG)) {
             outputRunningThreads();
         }
 
@@ -357,14 +325,14 @@ public class AutoMaker extends Application implements AutoUpdateCompletionListen
 //            Native.register("shell32");
 //        }
 //    }
+
     /**
      * Indicates whether any threads are believed to be running
      *
      * @return
      */
-    private boolean areThreadsStillRunning()
-    {
-        ThreadGroup rootThreadGroup = ThreadGroupUtils.getRootThreadGroup();
+    private boolean areThreadsStillRunning() {
+        ThreadGroup rootThreadGroup = getRootThreadGroup();
         int numberOfThreads = rootThreadGroup.activeCount();
         return numberOfThreads > 0;
     }
@@ -375,35 +343,30 @@ public class AutoMaker extends Application implements AutoUpdateCompletionListen
      *
      * @return
      */
-    private boolean outputRunningThreads()
-    {
-        ThreadGroup rootThreadGroup = ThreadGroupUtils.getRootThreadGroup();
+    private boolean outputRunningThreads() {
+        ThreadGroup rootThreadGroup = getRootThreadGroup();
         int numberOfThreads = rootThreadGroup.activeCount();
         Thread[] threadList = new Thread[numberOfThreads];
         rootThreadGroup.enumerate(threadList, true);
-    
-        if (numberOfThreads > 0)
-        {
+
+        if (numberOfThreads > 0) {
             steno.info("There are " + numberOfThreads + " threads running:");
-            for (Thread th : threadList)
-            {
+            for (Thread th : threadList) {
                 steno.passthrough("---------------------------------------------------");
                 steno.passthrough("THREAD DUMP:" + th.getName()
                         + " isDaemon=" + th.isDaemon()
                         + " isAlive=" + th.isAlive());
-                for (StackTraceElement element : th.getStackTrace())
-                {
+                for (StackTraceElement element : th.getStackTrace()) {
                     steno.passthrough(">>>" + element.toString());
                 }
                 steno.passthrough("---------------------------------------------------");
             }
         }
-    
+
         return numberOfThreads > 0;
     }
 
-    private void showMainStage()
-    {
+    private void showMainStage() {
         final AutoUpdateCompletionListener completeListener = this;
 
         mainStage.setOnShown((WindowEvent event) ->
@@ -414,8 +377,7 @@ public class AutoMaker extends Application implements AutoUpdateCompletionListen
                     completeListener);
             autoUpdater.start();
 
-            if (check3DSupported(i18nBundle))
-            {
+            if (check3DSupported(i18nBundle)) {
                 steno.debug("3D support OK");
                 WelcomeToApplicationManager.displayWelcomeIfRequired();
                 steno.debug("Starting comms manager");
@@ -426,24 +388,14 @@ public class AutoMaker extends Application implements AutoUpdateCompletionListen
 //            localWebInterface.start();
 //            displayManager.loadExternalModels(startupModelsToLoad, true, false);
 
-            LicenceManager.getInstance().addLicenceChangeListener((Optional<Licence> licence) -> {
-                if (Lookup.getUserPreferences().isCustomPrinterEnabled()
-                        && !BaseConfiguration.isApplicationFeatureEnabled(ApplicationFeature.OFFLINE_PRINTER))
-                {
-                    Lookup.getUserPreferences().setCustomPrinterEnabled(false);
-                }
-            });
 
-            LicenceManager.getInstance().validateLicence(false);
-            
+            checkFeaturesAvailability();
+
             // Offline printer check
-            if (Lookup.getUserPreferences().isCustomPrinterEnabled())
-            {
-                if (BaseConfiguration.isApplicationFeatureEnabled(ApplicationFeature.OFFLINE_PRINTER))
-                {
+            if (Lookup.getUserPreferences().isCustomPrinterEnabled()) {
+                if (BaseConfiguration.isApplicationFeatureEnabled(ApplicationFeature.OFFLINE_PRINTER)) {
                     RoboxCommsManager.getInstance().addDummyPrinter(true);
-                } else 
-                {
+                } else {
                     Lookup.getUserPreferences().setCustomPrinterEnabled(false);
                 }
             }
@@ -463,32 +415,24 @@ public class AutoMaker extends Application implements AutoUpdateCompletionListen
     }
 
     @Override
-    public void incomingComms(InterAppRequest interAppRequest)
-    {
+    public void incomingComms(InterAppRequest interAppRequest) {
         steno.info("Received an InterApp comms request: " + interAppRequest.toString());
 
-        if (interAppRequest instanceof AutoMakerInterAppRequest)
-        {
+        if (interAppRequest instanceof AutoMakerInterAppRequest) {
             AutoMakerInterAppRequest amRequest = (AutoMakerInterAppRequest) interAppRequest;
-            switch (amRequest.getCommand())
-            {
+            switch (amRequest.getCommand()) {
                 case LOAD_MESH_INTO_LAYOUT_VIEW:
                     String projectName = "Import";
                     List<String> modelsToLoad = new ArrayList<>();
                     boolean dontGroupModels = false;
 
-                    for (InterAppParameter interAppParam : amRequest.getUnencodedParameters())
-                    {
-                        if (interAppParam.getType() == InterAppParameterType.MODEL_NAME)
-                        {
+                    for (InterAppParameter interAppParam : amRequest.getUnencodedParameters()) {
+                        if (interAppParam.getType() == InterAppParameterType.MODEL_NAME) {
                             modelsToLoad.add(interAppParam.getUnencodedParameter());
-                        } else if (interAppParam.getType() == InterAppParameterType.PROJECT_NAME)
-                        {
+                        } else if (interAppParam.getType() == InterAppParameterType.PROJECT_NAME) {
                             projectName = interAppParam.getUnencodedParameter();
-                        } else if (interAppParam.getType() == InterAppParameterType.DONT_GROUP_MODELS)
-                        {
-                            switch (interAppParam.getUnencodedParameter())
-                            {
+                        } else if (interAppParam.getType() == InterAppParameterType.DONT_GROUP_MODELS) {
+                            switch (interAppParam.getUnencodedParameter()) {
                                 case "true":
                                     dontGroupModels = true;
                                     break;

@@ -3,9 +3,6 @@ package celtech.automaker;
 import celtech.configuration.ApplicationConfiguration;
 import celtech.roboxbase.ApplicationFeature;
 import celtech.roboxbase.configuration.BaseConfiguration;
-import celtech.roboxbase.licensing.LicenceManager;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.animation.SequentialTransition;
@@ -24,6 +21,11 @@ import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import libertysystems.stenographer.Stenographer;
 import libertysystems.stenographer.StenographerFactory;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import static celtech.roboxbase.configuration.BaseConfiguration.checkFeaturesAvailability;
 
 /**
  *
@@ -128,6 +130,6 @@ public class AutoMakerPreloader extends Preloader
     }
     
     private void checkLicenceFile() {
-        LicenceManager.getInstance().validateLicence(false);
+        checkFeaturesAvailability();
     }
 }

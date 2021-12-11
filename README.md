@@ -1,4 +1,5 @@
 # AutoMaker
+It is a fork of [Cel Robox Automaker](https://github.com/celsworthy/AutoMaker)
 AutoMaker is the software interface used for interacting with the Robox 3D printers.
 ## Building AutoMaker
 AutoMaker uses [Maven](http://maven.apache.org/download.cgi). You will either want to build the project directly using the maven command line, or use and IDE such as [Netbeans](http://netbeans.apache.org/download/index.html).
@@ -7,18 +8,16 @@ You will need JDK of 11.0.2 or later that contains a version of JavaFX 11.0.2 or
 
 AutoMaker depends on several other projects to run. Each can be cloned from GitHub:
 
-	git clone https://github.com/celsworthy/Configuration.git
-	git clone https://github.com/celsworthy/Stenographer.git
-	git clone https://github.com/celsworthy/Licence.git
-	git clone https://github.com/celsworthy/Language.git
-	git clone https://github.com/celsworthy/RoboxBase.git
-	git clone https://github.com/celsworthy/CELTechCore.git
+	git clone https://github.com/Automaker-Unofficial/Configuration.git
+	git clone https://github.com/Automaker-Unofficial/Stenographer.git
+	git clone https://github.com/Automaker-Unofficial/Language.git
+	git clone https://github.com/Automaker-Unofficial/RoboxBase.git
+	git clone https://github.com/Automaker-Unofficial/CELTechCore.git
 	
 The projects should be built in the following order:
 
 	Configuration
 	Stenographer
-	Licence
 	Language
 	RoboxBase
 	CELTechCore
