@@ -47,5 +47,4 @@ The config file needs to be specified as a VM argument. Go to project *propertie
 
 ### Installation
 
-Instalator building is not automated yet. To install an opensource version of Automaker istall an official one that can be downloaded [here](https://cel-robox.com/downloads) and then replace files in instalation folder of Automaker with files from releases page of this repo. [releases](https://github.com/Automaker-Unofficial/AutoMaker/releases)
-
+The installation building is not automated yet. To install an open-source version of Automaker install an official one that can be downloaded [here](https://cel-robox.com/downloads) and then replace files in the installation folder of Automaker with files from the releases page of this repo. [releases](https://github.com/Automaker-Unofficial/AutoMaker/releases)
