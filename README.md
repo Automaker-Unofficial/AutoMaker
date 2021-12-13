@@ -1,5 +1,5 @@
 # AutoMaker
-It is a fork of [Cel Robox Automaker](https://github.com/celsworthy/AutoMaker)
+It is a fork of [Cel Robox Automaker](https://github.com/celsworthy/AutoMaker)  
 AutoMaker is the software interface used for interacting with the Robox 3D printers.
 ## Building AutoMaker
 AutoMaker uses [Maven](http://maven.apache.org/download.cgi). You will either want to build the project directly using the maven command line, or use and IDE such as [Netbeans](http://netbeans.apache.org/download/index.html).
@@ -44,3 +44,8 @@ AutoMaker needs a VM system property "libertySystems.configFile" set to the full
 
 ### Running/Debugging from Netbeans
 The config file needs to be specified as a VM argument. Go to project *properties > Run* and add ```-DlibertySystems.configFile=<Path to repository>\AutoMaker\AutoMaker.configFile.xml``` to the VM arguments. You can then either run/debug the AutoMaker project.
+
+### Installation
+
+Instalator building is not automated yet. To install an opensource version of Automaker istall an official one that can be downloaded [here](https://cel-robox.com/downloads) and then replace files in instalation folder of Automaker with files from releases page of this repo. [releases](https://github.com/Automaker-Unofficial/AutoMaker/releases)
+
